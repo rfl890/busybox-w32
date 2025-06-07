@@ -2294,19 +2294,15 @@ char *decode_base64(char *dst, const char **pp_src) FAST_FUNC;
 char *decode_base32(char *dst, const char **pp_src) FAST_FUNC;
 void read_base64(FILE *src_stream, FILE *dst_stream, int flags) FAST_FUNC;
 
-typedef struct md5_ctx_t {
-	uint8_t wbuffer[64]; /* always correctly aligned for uint64_t */
-	void (*process_block)(struct md5_ctx_t*) FAST_FUNC;
-	uint64_t total64;    /* must be directly before hash[] */
-	uint32_t hash[8];    /* 4 elements for md5, 5 for sha1, 8 for sha256 */
-} md5_ctx_t;
-typedef struct md5_ctx_t sha1_ctx_t;
-typedef struct md5_ctx_t sha256_ctx_t;
-typedef struct sha512_ctx_t {
-	uint64_t total64[2];  /* must be directly before hash[] */
-	uint64_t hash[8];
-	uint8_t wbuffer[128]; /* always correctly aligned for uint64_t */
-} sha512_ctx_t;
+struct bcrypt_hash_ctx_t {
+	void *handle;
+	void *hash_obj;
+	unsigned int output_size;
+};
+typedef struct bcrypt_hash_ctx_t md5_ctx_t;
+typedef struct bcrypt_hash_ctx_t sha1_ctx_t;
+typedef struct bcrypt_hash_ctx_t sha256_ctx_t;
+typedef struct bcrypt_hash_ctx_t sha512_ctx_t;
 typedef struct sha3_ctx_t {
 	uint64_t state[25];
 	unsigned bytes_queued;
@@ -2317,20 +2313,20 @@ void md5_hash(md5_ctx_t *ctx, const void *buffer, size_t len) FAST_FUNC;
 unsigned md5_end(md5_ctx_t *ctx, void *resbuf) FAST_FUNC;
 void sha1_begin(sha1_ctx_t *ctx) FAST_FUNC;
 #define sha1_hash md5_hash
-unsigned sha1_end(sha1_ctx_t *ctx, void *resbuf) FAST_FUNC;
+#define sha1_end md5_end
 void sha256_begin(sha256_ctx_t *ctx) FAST_FUNC;
 #define sha256_hash md5_hash
-#define sha256_end  sha1_end
+#define sha256_end  md5_end
 void sha512_begin(sha512_ctx_t *ctx) FAST_FUNC;
-void sha512_hash(sha512_ctx_t *ctx, const void *buffer, size_t len) FAST_FUNC;
-unsigned sha512_end(sha512_ctx_t *ctx, void *resbuf) FAST_FUNC;
+#define sha512_hash md5_hash
+#define sha512_end md5_end
 void sha3_begin(sha3_ctx_t *ctx) FAST_FUNC;
 void sha3_hash(sha3_ctx_t *ctx, const void *buffer, size_t len) FAST_FUNC;
 unsigned sha3_end(sha3_ctx_t *ctx, void *resbuf) FAST_FUNC;
 /* TLS benefits from knowing that sha1 and sha256 share these. Give them "agnostic" names too */
-typedef struct md5_ctx_t md5sha_ctx_t;
+typedef md5_ctx_t md5sha_ctx_t;
 #define md5sha_hash md5_hash
-#define sha_end sha1_end
+#define sha_end md5_end
 enum {
 	MD5_OUTSIZE    = 16,
 	SHA1_OUTSIZE   = 20,
